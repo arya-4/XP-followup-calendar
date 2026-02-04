@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reminder System</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    button { padding: 10px 16px; border-radius: 12px; border: none; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.1); }
+    .active { font-weight: bold; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .reminder { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 8px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+  </style>
+</head>
+<body>
+
+<h1>Reminder System</h1>
+
+<div class="tabs">
+  <button onclick="showTab('input')" id="inputTab">Add Reminder</button>
+  <button onclick="showTab('reminders')" id="remindersTab">Reminders</button>
+</div>
+
+<div id="input" class="section active">
+  <h2>Add Entry</h2>
+  <input id="name" placeholder="Name" />
+  <input id="date" type="date" />
+  <button onclick="addReminder()">Save</button>
+</div>
+
+<div id="reminders" class="section">
+  <h2>Active Reminders</h2>
+  <div id="reminderList"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'reminderData'
+
+function showTab(tab) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'))
+  document.getElementById(tab).classList.add('active')
+}
+
+function loadData() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+}
+
+function addReminder() {
+  const name = document.getElementById('name').value
+  const date = document.getElementById('date').value
+  if (!name || !date) return alert('Fill both fields')
+
+  const data = loadData()
+  data.push({ name, date, cleared: false })
+  saveData(data)
+
+  document.getElementById('name').value = ''
+  document.getElementById('date').value = ''
+}
+
+function daysBetween(a, b) {
+  return Math.floor((b - a) / (1000 * 60 * 60 * 24))
+}
+
+function shouldShow(baseDate) {
+  const now = new Date()
+  const targets = [3, 10, 30]
+
+  return targets.some(d => {
+    const target = new Date(baseDate)
+    target.setDate(target.getDate() + d)
+    const diff = daysBetween(now, target)
+    return diff >= 0 && diff <= 4
+  })
+}
+
+function renderReminders() {
+  const list = document.getElementById('reminderList')
+  list.innerHTML = ''
+
+  const data = loadData()
+
+  data.forEach((item, index) => {
+    if (item.cleared) return
+
+    if (shouldShow(new Date(item.date))) {
+      const div = document.createElement('div')
+      div.className = 'reminder'
+
+      const checkbox = document.createElement('input')
+      checkbox.type = 'checkbox'
+      checkbox.onchange = () => {
+        data[index].cleared = true
+        saveData(data)
+        renderReminders()
+      }
+
+      const label = document.createElement('span')
+      label.textContent = `${item.name} — ${item.date}`
+
+      div.appendChild(checkbox)
+      div.appendChild(label)
+      list.appendChild(div)
+    }
+  })
+}
+
+setInterval(renderReminders, 60000)
+renderReminders()
+</script>
+
+</body>
+</html>
