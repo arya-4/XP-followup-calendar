@@ -20,6 +20,7 @@
 <div class="tabs">
   <button onclick="showTab('input')" id="inputTab">Add Reminder</button>
   <button onclick="showTab('reminders')" id="remindersTab">Reminders</button>
+  <button onclick="showTab('all')" id="allTab">All Entries</button>
 </div>
 
 <div id="input" class="section active">
@@ -32,6 +33,12 @@
 <div id="reminders" class="section">
   <h2>Active Reminders</h2>
   <div id="reminderList"></div>
+</div>
+
+<div id="all" class="section">
+  <h2>All Saved Entries</h2>
+  <div id="allList"></div>
+</div>
 </div>
 
 <script>
@@ -98,6 +105,7 @@ function renderReminders() {
         data[index].cleared = true
         saveData(data)
         renderReminders()
+        renderAll()
       }
 
       const label = document.createElement('span')
@@ -110,8 +118,37 @@ function renderReminders() {
   })
 }
 
-setInterval(renderReminders, 60000)
+function renderAll() {
+  const list = document.getElementById('allList')
+  list.innerHTML = ''
+
+  const data = loadData()
+
+  data.forEach(item => {
+    const div = document.createElement('div')
+    div.className = 'reminder'
+    div.textContent = `${item.name} — ${item.date}`
+    list.appendChild(div)
+  })
+}
+
+      const label = document.createElement('span')
+      label.textContent = `${item.name} — ${item.date}`
+
+      div.appendChild(checkbox)
+      div.appendChild(label)
+      list.appendChild(div)
+    }
+  })
+}
+
+setInterval(() => {
+  renderReminders()
+  renderAll()
+}, 60000)
+
 renderReminders()
+renderAll()
 </script>
 
 </body>
